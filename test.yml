@@ -1,0 +1,13 @@
+---
+version: "2"
+services:
+  ubuntu:
+    image: ubuntu:latest
+    container_name: ubuntu
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-America/Chicago}
+    volumes:
+      - /mnt/e/Docker/testvol:/config
+    restart: unless-stopped

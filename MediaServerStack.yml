@@ -1,0 +1,118 @@
+---
+version: "2"
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-America/Chicago}
+      # - JELLYFIN_PublishedServerUrl=192.168.0.5 #optional
+    volumes:
+      - jellyfin-config:/config
+    ports:
+      - 8096:8096
+      - 8920:8920 #optional
+      - 7359:7359/udp #optional
+      - 1900:1900/udp #optional
+    restart: unless-stopped
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:develop
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-America/Chicago}
+    volumes:
+      - prowlarr-config:/config
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+
+  qbittorrentvpn:
+    image: markusmcnugen/qbittorrentvpn:latest
+    container_name: qbittorrentvpn
+    privileged: true
+    environment:
+      - VPN_USERNAME=${VPN_USERNAME}
+      - VPN_PASSWORD=${VPN_PASSWORD}
+      - PUID=998
+      - PGID=100
+      - WEBUI_PORT_ENV=8080
+      - INCOMING_PORT_ENV=8999
+      - VPN_ENABLED=yes
+      - LAN_NETWORK=10.1.1.0/24 #adjust this to YOUR network settings
+      - NAME_SERVERS=1.1.1.1,1.0.0.1 #you can use whatever DNS provider you want
+      - TZ=${TZ:-America/Chicago}
+    ports:
+      - 8080:8080
+      - 8999:8999
+      - 8999:8999/udp
+    volumes:
+      - qbittorrent-config:/config
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-America/Chicago}
+    volumes:
+      - radarr-config:/config
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-America/Chicago}
+    volumes:
+      - sonarr-config:/config
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+
+  tdarr:
+    container_name: tdarr
+    image: ghcr.io/haveagitgat/tdarr:latest
+    restart: unless-stopped
+    network_mode: bridge
+    ports:
+      - 8265:8265 # webUI port
+      - 8266:8266 # server port
+      - 8267:8267 # Internal node port
+      # - 8268:8268 # Example extra node port
+    environment:
+      - TZ=${TZ:-America/Chicago}
+      - PUID=1000
+      - PGID=1000
+      - UMASK_SET=002
+      - serverIP=0.0.0.0
+      - serverPort=8266
+      - webUIPort=8265
+      - internalNode=true
+      - nodeID=MyInternalNode
+    volumes:
+      - tdarr-server:/app/server
+      - tdarr-config:/app/configs
+      - tdarr-logs:/app/logs
+      - tdarr-transcode_cache:/temp
+
+volumes:
+  jellyfin-config:
+  prowlarr-config:
+  qbittorrent-config:
+  radarr-config:
+  sonarr-config:
+  tdarr-server:
+  tdarr-config:
+  tdarr-logs:
+  tdarr-transcode_cache:

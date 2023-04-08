@@ -1,0 +1,11 @@
+---
+version: "2.1"
+services:
+  homer:
+    image: b4bz/homer:latest
+    container_name: homer
+    volumes:
+      - /home/miwwge/containers/homer:/www/assets
+    ports:
+      - 8080:8080
+    restart: always
