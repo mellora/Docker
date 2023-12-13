@@ -1,0 +1,117 @@
+version: "3.8"
+services:
+  #===  Arr Stack  ===#
+  # Subtitle Manager
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - /mnt/nfs/containers/Bazarr:/config
+      - /mnt/smb/media/Movies:/movies
+      - /mnt/smb/media/Shows:/tv
+    ports:
+      - 6767:6767
+    restart: unless-stopped
+  bazarr-anime:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr-anime
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - /mnt/nfs/containers/Bazarr-Anime:/config
+      - /mnt/smb/media/Movies-Anime:/movies
+      - /mnt/smb/media/Anime:/tv
+    ports:
+      - 6768:6767
+    restart: unless-stopped
+  # Media Indexer
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - /mnt/nfs/containers/Prowlarr:/config
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+  # Movie Manager for Anime Movies
+  radarr-anime:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr-anime
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - /mnt/nfs/containers/Radarr-Anime:/config
+      - /mnt/smb/media/Movies-Anime:/movies
+      - /mnt/smb/torrents:/downloads
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+  # Movie Manager for Non-Anime Movies
+  radarr-movies:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr-movies
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - /mnt/nfs/containers/Radarr-Movies:/config
+      - /mnt/smb/media/Movies:/movies
+      - /mnt/smb/torrents:/downloads
+    ports:
+      - 7879:7878
+    restart: unless-stopped
+  # Show Manager for Anime
+  sonarr-anime:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr-anime
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - /mnt/nfs/containers/Sonarr-Anime:/config
+      - /mnt/smb/media/Anime:/tv
+      - /mnt/smb/torrents:/downloads
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+  # Show Manager for TV Shows
+  sonarr-shows:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr-shows
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - /mnt/nfs/containers/Sonarr-Shows:/config
+      - /mnt/smb/media/Shows:/tv
+      - /mnt/smb/torrents:/downloads
+    ports:
+      - 8990:8989
+    restart: unless-stopped
+  # Proxy Servers
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+      - TZ=America/Chicago
+    ports:
+      - "${PORT:-8191}:8191"
+    restart: unless-stopped 
