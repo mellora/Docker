@@ -1,5 +1,27 @@
+---
 version: "3.8"
 services:
+  jellyfin-nsfw:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin-nsfw
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ="${TIMEZONE:-Etc/UTC}"
+      #- JELLYFIN_PublishedServerUrl=192.168.0.5 #optional
+    volumes:
+      - /docker/Jellyfin-NSFW:/config
+      - cifs_media_mount:/mnt/media
+    ports:
+      - 8096:8096
+      #- 8920:8920 #optional
+      #- 7359:7359/udp #optional
+      #- 1900:1900/udp #optional
+    devices:
+      - "/dev/dri:/dev/dri"
+    networks:
+      - default
+    restart: unless-stopped
   #===  Arr Stack  ===#
   # Subtitle Manager
   bazarr:
@@ -8,13 +30,14 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=America/Chicago
+      - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
-      - /mnt/nfs/containers/Bazarr:/config
-      - /mnt/smb/media/Movies:/movies
-      - /mnt/smb/media/Shows:/tv
+      - /docker/Bazarr:/config
+      - cifs_media_mount:/media
     ports:
       - 6767:6767
+    networks:
+      - default
     restart: unless-stopped
   bazarr-anime:
     image: lscr.io/linuxserver/bazarr:latest
@@ -22,13 +45,14 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=America/Chicago
+      - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
-      - /mnt/nfs/containers/Bazarr-Anime:/config
-      - /mnt/smb/media/Movies-Anime:/movies
-      - /mnt/smb/media/Anime:/tv
+      - /docker/Bazarr-Anime:/config
+      - cifs_media_mount:/media
     ports:
       - 6768:6767
+    networks:
+      - default
     restart: unless-stopped
   # Media Indexer
   prowlarr:
@@ -37,11 +61,13 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=America/Chicago
+      - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
-      - /mnt/nfs/containers/Prowlarr:/config
+      - /docker/Prowlarr:/config
     ports:
       - 9696:9696
+    networks:
+      - default
     restart: unless-stopped
   # Movie Manager for Anime Movies
   radarr-anime:
@@ -50,13 +76,15 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=America/Chicago
+      - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
-      - /mnt/nfs/containers/Radarr-Anime:/config
-      - /mnt/smb/media/Movies-Anime:/movies
-      - /mnt/smb/torrents:/downloads
+      - /docker/Radarr-Anime:/config
+      - cifs_media_mount:/mnt/media
+      - cifs_torrent_mount:/mnt/downloads
     ports:
       - 7878:7878
+    networks:
+      - default
     restart: unless-stopped
   # Movie Manager for Non-Anime Movies
   radarr-movies:
@@ -65,13 +93,15 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=America/Chicago
+      - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
-      - /mnt/nfs/containers/Radarr-Movies:/config
-      - /mnt/smb/media/Movies:/movies
-      - /mnt/smb/torrents:/downloads
+      - /docker/Radarr-Movies:/config
+      - cifs_media_mount:/mnt/media
+      - cifs_torrent_mount:/mnt/downloads
     ports:
       - 7879:7878
+    networks:
+      - default
     restart: unless-stopped
   # Show Manager for Anime
   sonarr-anime:
@@ -80,13 +110,15 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=America/Chicago
+      - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
-      - /mnt/nfs/containers/Sonarr-Anime:/config
-      - /mnt/smb/media/Anime:/tv
-      - /mnt/smb/torrents:/downloads
+      - /docker/Sonarr-Anime:/config
+      - cifs_media_mount:/mnt/media
+      - cifs_torrent_mount:/mnt/downloads
     ports:
       - 8989:8989
+    networks:
+      - default
     restart: unless-stopped
   # Show Manager for TV Shows
   sonarr-shows:
@@ -95,13 +127,32 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=America/Chicago
+      - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
-      - /mnt/nfs/containers/Sonarr-Shows:/config
-      - /mnt/smb/media/Shows:/tv
-      - /mnt/smb/torrents:/downloads
+      - /docker/Sonarr-Shows:/config
+      - cifs_media_mount:/mnt/media
+      - cifs_torrent_mount:/mnt/downloads
     ports:
       - 8990:8989
+    networks:
+      - default
+    restart: unless-stopped
+  # NSFW Manager
+  whisparr:
+    image: ghcr.io/hotio/whisparr:latest
+    container_name: whisparr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ="${TIMEZONE:-Etc/UTC}"
+    volumes:
+      - /docker/Whisparr:/config
+      - cifs_media_mount:/mnt/media
+      - cifs_torrent_mount:/mnt/downloads
+    ports:
+      - 6969:6969
+    networks:
+      - default
     restart: unless-stopped
   # Proxy Servers
   flaresolverr:
@@ -111,7 +162,26 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - LOG_HTML=${LOG_HTML:-false}
       - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
-      - TZ=America/Chicago
+      - TZ="${TIMEZONE:-Etc/UTC}"
     ports:
-      - "${PORT:-8191}:8191"
+      - 8191:8191
+    networks:
+      - default
     restart: unless-stopped 
+
+networks:
+  default:
+
+volumes:
+  cifs_media_mount:
+    driver: local
+    driver_opts:
+      type: cifs
+      device: //${CIFS_REMOTE_IP}/Media
+      o: "username=${CIFS_USERNAME},password=${CIFS_PASSWORD},uid=1000,gid=1000"
+  cifs_torrent_mount:
+    driver: local
+    driver_opts:
+      type: cifs
+      device: //${CIFS_REMOTE_IP}/Torrents
+      o: "username=${CIFS_USERNAME},password=${CIFS_PASSWORD}"
