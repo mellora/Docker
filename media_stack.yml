@@ -25,6 +25,7 @@ services:
       - PGID=1000
       - UMASK=002
       - TZ="${TIMEZONE:-Etc/UTC}"
+      - WEBUI_PORTS=6767/tcp,6767/udp
     volumes:
       - /docker/Bazarr:/config
       - cifs_media_mount:/media
@@ -41,9 +42,10 @@ services:
       - PGID=1000
       - UMASK=002
       - TZ="${TIMEZONE:-Etc/UTC}"
+      - WEBUI_PORTS=6768/tcp,6768/udp
     volumes:
       - /docker/Bazarr-Anime:/config
-      - cifs_media_mount:/media
+      - cifs_media_manager_mount:/mnt/media
     ports:
       - 6768:6767
     networks:
@@ -76,8 +78,7 @@ services:
       - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
       - /docker/Radarr-Anime:/config
-      - cifs_media_mount:/mnt/media
-      - cifs_torrent_mount:/mnt/downloads
+      - cifs_media_manager_mount:/mnt/media
     ports:
       - 7878:7878
     networks:
@@ -94,8 +95,7 @@ services:
       - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
       - /docker/Radarr-Movies:/config
-      - cifs_media_mount:/mnt/media
-      - cifs_torrent_mount:/mnt/downloads
+      - cifs_media_manager_mount:/mnt/media
     ports:
       - 7879:7878
     networks:
@@ -130,8 +130,7 @@ services:
       - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
       - /docker/Sonarr-Shows:/config
-      - cifs_media_mount:/mnt/media
-      - cifs_torrent_mount:/mnt/downloads
+      - cifs_media_manager_mount:/mnt/media
     ports:
       - 8990:8989
     networks:
@@ -148,8 +147,7 @@ services:
       - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
       - /docker/Whisparr:/config
-      - cifs_media_mount:/mnt/media
-      - cifs_torrent_mount:/mnt/downloads
+      - cifs_media_manager_mount:/mnt/media
     ports:
       - 6969:6969
     networks:
@@ -180,7 +178,7 @@ services:
       - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
       - /docker/qBittorrent:/config
-      - cifs_torrent_mound:/mnt/downloads
+      - cifs_media_manager_mount:/mnt/media
     ports:
       - 8080:8080
 
@@ -189,15 +187,10 @@ networks:
 
 volumes:
   jellyfin_cache:
-  cifs_media_mount:
-    driver: local
-    driver_opts:
-      type: cifs
-      device: //${CIFS_REMOTE_IP}/Media
-      o: "username=${CIFS_USERNAME},password=${CIFS_PASSWORD},uid=1000,gid=1000"
-  cifs_torrent_mount:
+
+  cifs_media_manager_mount:
     driver: local
     driver_opts:
       type: cifs
       device: //${CIFS_REMOTE_IP}/Torrents
-      o: "username=${CIFS_USERNAME},password=${CIFS_PASSWORD}"
+      o: "username=${CIFS_USERNAME},password=${CIFS_PASSWORD},uid=1000,gid=1000"
