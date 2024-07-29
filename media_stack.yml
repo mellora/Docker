@@ -1,35 +1,29 @@
 ---
 version: "3.8"
 services:
-  jellyfin-nsfw:
-    image: lscr.io/linuxserver/jellyfin:latest
-    container_name: jellyfin-nsfw
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ="${TIMEZONE:-Etc/UTC}"
-      #- JELLYFIN_PublishedServerUrl=192.168.0.5 #optional
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    user: uid:gid
+    network_mode: 'host'
     volumes:
-      - /docker/Jellyfin-NSFW:/config
+      - /docker/jellyfin:/config
+      - jellyfin_cache:/cache
       - cifs_media_mount:/mnt/media
-    ports:
-      - 8096:8096
-      #- 8920:8920 #optional
-      #- 7359:7359/udp #optional
-      #- 1900:1900/udp #optional
     devices:
       - "/dev/dri:/dev/dri"
-    networks:
-      - default
     restart: unless-stopped
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
   #===  Arr Stack  ===#
   # Subtitle Manager
   bazarr:
-    image: lscr.io/linuxserver/bazarr:latest
+    image: ghcr.io/hotio/bazarr:latest
     container_name: bazarr
     environment:
       - PUID=1000
       - PGID=1000
+      - UMASK=002
       - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
       - /docker/Bazarr:/config
@@ -40,11 +34,12 @@ services:
       - default
     restart: unless-stopped
   bazarr-anime:
-    image: lscr.io/linuxserver/bazarr:latest
+    image: ghcr.io/hotio/bazarr:latest
     container_name: bazarr-anime
     environment:
       - PUID=1000
       - PGID=1000
+      - UMASK=002
       - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
       - /docker/Bazarr-Anime:/config
@@ -56,11 +51,12 @@ services:
     restart: unless-stopped
   # Media Indexer
   prowlarr:
-    image: lscr.io/linuxserver/prowlarr:latest
+    image: ghcr.io/hotio/prowlarr:latest
     container_name: prowlarr
     environment:
       - PUID=1000
       - PGID=1000
+      - UMASK=002
       - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
       - /docker/Prowlarr:/config
@@ -71,11 +67,12 @@ services:
     restart: unless-stopped
   # Movie Manager for Anime Movies
   radarr-anime:
-    image: lscr.io/linuxserver/radarr:latest
+    image: ghcr.io/hotio/radarrradarr:latest
     container_name: radarr-anime
     environment:
       - PUID=1000
       - PGID=1000
+      - UMASK=002
       - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
       - /docker/Radarr-Anime:/config
@@ -88,11 +85,12 @@ services:
     restart: unless-stopped
   # Movie Manager for Non-Anime Movies
   radarr-movies:
-    image: lscr.io/linuxserver/radarr:latest
+    image: ghcr.io/hotio/radarr:latest
     container_name: radarr-movies
     environment:
       - PUID=1000
       - PGID=1000
+      - UMASK=002
       - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
       - /docker/Radarr-Movies:/config
@@ -105,11 +103,12 @@ services:
     restart: unless-stopped
   # Show Manager for Anime
   sonarr-anime:
-    image: lscr.io/linuxserver/sonarr:latest
+    image: ghcr.io/hotio/sonarr:latest
     container_name: sonarr-anime
     environment:
       - PUID=1000
       - PGID=1000
+      - UMASK=002
       - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
       - /docker/Sonarr-Anime:/config
@@ -122,11 +121,12 @@ services:
     restart: unless-stopped
   # Show Manager for TV Shows
   sonarr-shows:
-    image: lscr.io/linuxserver/sonarr:latest
+    image: ghcr.io/hotio/sonarr:latest
     container_name: sonarr-shows
     environment:
       - PUID=1000
       - PGID=1000
+      - UMASK=002
       - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
       - /docker/Sonarr-Shows:/config
@@ -144,6 +144,7 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
+      - UMASK=002
       - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
       - /docker/Whisparr:/config
@@ -168,11 +169,26 @@ services:
     networks:
       - default
     restart: unless-stopped 
+  # Torrent Client
+  qbittorrent:
+    image: ghcr.io/hotio/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ="${TIMEZONE:-Etc/UTC}"
+    volumes:
+      - /docker/qBittorrent:/config
+      - cifs_torrent_mound:/mnt/downloads
+    ports:
+      - 8080:8080
 
 networks:
   default:
 
 volumes:
+  jellyfin_cache:
   cifs_media_mount:
     driver: local
     driver_opts:
