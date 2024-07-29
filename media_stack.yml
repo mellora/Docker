@@ -1,5 +1,4 @@
 ---
-version: "3.8"
 services:
   jellyfin:
     image: jellyfin/jellyfin:latest
@@ -9,7 +8,7 @@ services:
     volumes:
       - /docker/jellyfin:/config
       - jellyfin_cache:/cache
-      - cifs_media_mount:/mnt/media
+      - cifs_media_manager_mount:/mnt/media
     devices:
       - "/dev/dri:/dev/dri"
     restart: unless-stopped
@@ -28,7 +27,7 @@ services:
       - WEBUI_PORTS=6767/tcp,6767/udp
     volumes:
       - /docker/Bazarr:/config
-      - cifs_media_mount:/media
+      - cifs_media_manager_mount:/media
     ports:
       - 6767:6767
     networks:
@@ -69,7 +68,7 @@ services:
     restart: unless-stopped
   # Movie Manager for Anime Movies
   radarr-anime:
-    image: ghcr.io/hotio/radarrradarr:latest
+    image: ghcr.io/hotio/radarr:latest
     container_name: radarr-anime
     environment:
       - PUID=1000
@@ -112,8 +111,7 @@ services:
       - TZ="${TIMEZONE:-Etc/UTC}"
     volumes:
       - /docker/Sonarr-Anime:/config
-      - cifs_media_mount:/mnt/media
-      - cifs_torrent_mount:/mnt/downloads
+      - cifs_media_manager_mount:/mnt/media
     ports:
       - 8989:8989
     networks:
@@ -153,6 +151,7 @@ services:
     networks:
       - default
     restart: unless-stopped
+  #===  Supporting Programs Stack  ===#
   # Proxy Servers
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
@@ -167,7 +166,7 @@ services:
     networks:
       - default
     restart: unless-stopped 
-  # Torrent Client
+  # Torrenting Client
   qbittorrent:
     image: ghcr.io/hotio/qbittorrent:latest
     container_name: qbittorrent
@@ -192,5 +191,5 @@ volumes:
     driver: local
     driver_opts:
       type: cifs
-      device: //${CIFS_REMOTE_IP}/Torrents
+      device: //${CIFS_REMOTE_IP}/Media_Managment
       o: "username=${CIFS_USERNAME},password=${CIFS_PASSWORD},uid=1000,gid=1000"
