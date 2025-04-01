@@ -6,7 +6,7 @@ services:
     user: uid:gid
     network_mode: 'host'
     volumes:
-      - /docker/jellyfin:/config
+      - /docker/Jellyfin:/config
       - jellyfin_cache:/cache
       - cifs_media_manager_mount:/mnt/media
     devices:
