@@ -1,8 +1,9 @@
 ---
 services:
   mealie:
-    image: ghcr.io/mealie-recipes/mealie:v1.0.0-RC1.1
+    image: ghcr.io/mealie-recipes/mealie:v2.8.0
     container_name: mealie
+    restart: always
     ports:
         - 9000:9000
     deploy:
@@ -10,43 +11,37 @@ services:
         limits:
           memory: 1000M
     volumes:
-      - /mnt/nfs/containers/Mealie:/app/data/
+      - /docker/Mealie/data:/app/data/
     environment:
-    # Set Backend ENV Variables Here
-      # General
-      - PUID=1000 # UserID permissions between host OS and container
-      - PGID=1000 # GroupID permissions between host OS and container
-      #- DEFAULT_GROUP="Home" # The default group for users
-      #- DEFAULT_EMAIL="changeme@example.com" # The default username for the superuser
-      #- DEFAULT_PASSWORD="MyPassword" # The default password for the superuser
-      - BASE_URL=$MEALIE_URL # Used for Notifications
-      #- TOKEN_TIME=48 # The time in hours that a login/auth token is valid
-      #- API_PORT=9000 # The port exposed by backend API. Do not change this if you're running in Docker
-      #- API_DOCS=true # Turns on/off access to the API documentation locally.
-      - TZ=America/Chicago # Must be set to get correct date/time on the server
-      - ALLOW_SIGNUP=true # Allow user sign-up without token
-      
-      # Security
-      #- SECURITY_MAX_LOGIN_ATTEMPTS=5 # Maximum times a user can provide an invalid password before their account is locked
-      #- SECURITY_USER_LOCKOUT_TIME=24 # Time in hours for how long a users account is locked
-      
-      # Database
-      #- DB_ENGINE="sqlite" # Optional: 'sqlite', 'postgres'
-      #- POSTGRES_USER="mealie" # Postgres database user
-      #- POSTGRES_PASSWORD="mealie" # Postgres database password
-      #- POSTGRES_SERVER="postgres" # Postgres database server address
-      #- POSTGRES_PORT=5432 # Postgres database port
-      #- POSTGRES_DB="mealie" # Postgres database name
-      
-      # Email
-      
-      # Webworker
-      #- WEB_GUNICORN=false # Enables Gunicorn to manage Uvicorn web for multiple works
-      #- WORKERS_PER_CORE=1 # Set the number of workers to the number of CPU cores multiplied by this value (Value * CPUs). More info [here][workers_per_core]
-      - MAX_WORKERS=1 # Set the maximum number of workers to use. Default is not set meaning unlimited. More info [here][max_workers]
-      - WEB_CONCURRENCY=1 # Override the automatic definition of number of workers. More info [here][web_concurrency]
-      
-      # LDAP
-      
-      # Theming
+      # Set Backend ENV Variables Here
+      ALLOW_SIGNUP: false
+      PUID: 1000
+      PGID: 1000
+      TZ: America/Chicago
+      BASE_URL: https://mealie.mellor-house.us
+      # Database Settings
+      DB_ENGINE: postgres
+      POSTGRES_USER: mealie
+      POSTGRES_PASSWORD: mealie
+      POSTGRES_SERVER: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: mealie
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    container_name: postgres
+    image: postgres:15
     restart: always
+    volumes:
+      - /docker/Mealie/postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: mealie
+      POSTGRES_USER: mealie
+      PGUSER: mealie
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
